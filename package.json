@@ -1,0 +1,18 @@
+{
+  "name": "zor_add_to_cart",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ext.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js",
+    "dev": "node main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "fast-csv": "^4.3.6",
+    "puppeteer": "^10.4.0"
+  }
+}

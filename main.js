@@ -119,6 +119,7 @@ async function tryCoupons(page, coupons) {
 
   for (let i = 0; i < coupons.length; i++) {
     try {
+      await page.waitForTimeout(1000 * 10);
       await addCoupon(page, coupons[i].coupon);
       // CHECK if coupon is working
       const cartElement = await page.$(".current-promo");
@@ -134,7 +135,9 @@ async function tryCoupons(page, coupons) {
           (element) => element.innerText,
           cart
         );
-        returnArray.push([coupons[i].coupon, cartError.toString().trim()]);
+        returnArray.push([coupons[i].coupon, "Error"]);
+        
+        // returnArray.push([coupons[i].coupon, cartError.toString().trim()]);
       } catch (error) {
         returnArray.push([coupons[i].coupon, "Error"]);
       }

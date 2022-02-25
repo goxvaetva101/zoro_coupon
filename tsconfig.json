@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "CommonJs",
+        "outDir": "built",
+        // "allowJs": true,
+        "lib": ["ES2020", "DOM"],
+        "target": "ES2017",
+        "declaration": true,
+        "sourceMap": true,
+        "esModuleInterop": true
+    },
+    "include": ["src"],
+    "exclude": ["node_modules"]
+
+}

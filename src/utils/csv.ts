@@ -1,8 +1,10 @@
-import { parseFile, writeToPath } from "fast-csv";
+import { parseFile, writeToPath, writeToStream } from "fast-csv";
 import {
     DEFAULT_CSV_FORMATTER_OPTIONS,
     DEFAULT_CSV_READER_OPTIONS,
 } from "./defaults";
+
+import * as fs from 'fs';
 
 export async function readCsv(
     fileName: string,
@@ -25,8 +27,13 @@ export async function writeCsv(
     options = DEFAULT_CSV_FORMATTER_OPTIONS
 ) {
     return new Promise<void>((resolve, reject) => {
-        writeToPath(fileName, data, options)
-            .on("error", (error) => reject(error))
-            .on("finish", () => resolve());
+
+        const stream = fs.createWriteStream("out.csv",{flags: 'a'});
+        writeToStream(stream, data, {
+    includeEndRowDelimiter: true,
+
+        })
+                .on('error', (err: Error) => reject(err))
+                .on('finish', () => resolve());
     });
 }

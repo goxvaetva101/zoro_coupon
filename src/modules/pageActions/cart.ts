@@ -1,45 +1,65 @@
-// async function addToCart(page, product) {
-//     try {
-//       await page.goto(product);
-//       console.log("Opened Product Page!");
+import { Page } from "puppeteer";
+import { logger } from "../../utils/logger";
 
-//       await page.waitForFunction(
-//         '!isNaN(document.querySelector("span.header-cart__icon").innerText)'
-//       );
+export async function addToCart(page: Page, url: string) {
+    await page.goto(url);
+    logger.info("Opened Product Page!");
 
-//       // Get cart item quantity
-//       const cartElement = await page.$("span.header-cart__icon");
-//       let beforeAdding =
-//         (await page.evaluate((element) => element.innerText, cartElement)) - 0;
+    await page.waitForFunction(
+        '!isNaN(document.querySelector("span.header-cart__count").innerText)'
+    );
 
-//       // Press add to cart buttton
-//       await page.evaluate(() => {
-//         return document
-//           .evaluate(
-//             '//button[contains(text(), "Add to Cart")]',
-//             document,
-//             null,
-//             XPathResult.FIRST_ORDERED_NODE_TYPE,
-//             null
-//           )
-//           .singleNodeValue.click();
-//       });
+    const beforeAdding = await page.evaluate(() => {
+        const cartElement = document.querySelector("span.header-cart__count");
+        const beforeAdding = cartElement.textContent;
 
-//       // wait till adding to cart
-//       await page.waitForXPath("/html/body/main/div[1]/div[2]/div[2]/div[1]/h2");
+        const $addToCartButton = document.querySelector(
+            ".add-to-cart__button"
+        ) as HTMLInputElement;
 
-//       let afterAdding =
-//         (await page.evaluate((element) => element.innerText, cartElement)) - 0;
+        $addToCartButton.click();
+        return +beforeAdding;
+    });
 
-//       if (afterAdding - beforeAdding > 0) {
-//         console.log("Added to Cart!");
-//         return "Added To Cart!";
-//       }
+    logger.info("Before Adding to Cart, Items in Cart: " + beforeAdding);
 
-//       console.log("Something Went Wrong");
-//       return "Something Went Wrong";
-//     } catch (error) {
-//       console.log("error");
-//       return error;
-//     }
-//   }
+    // // Get cart item quantity
+    // const cartElement = await page.$("span.header-cart__icon");
+    // let beforeAdding =
+    //     (await page.evaluate((element) => element.innerText, cartElement)) - 0;
+
+    // // Press add to cart buttton
+    // await page.evaluate(() => {
+    //     return document
+    //         .evaluate(
+    //             '//button[contains(text(), "Add to Cart")]',
+    //             document,
+    //             null,
+    //             XPathResult.FIRST_ORDERED_NODE_TYPE,
+    //             null
+    //         )
+    //         .singleNodeValue.click();
+    // });
+
+    // wait till adding to cart
+    await page.waitForXPath("/html/body/main/div[1]/div[2]/div[2]/div[1]/h2");
+
+    const afterAdding = await page.evaluate(() => {
+        const cartElement = document.querySelector("span.header-cart__count");
+        const afterAdding = cartElement.textContent;
+        return +afterAdding;
+    });
+
+    logger.info("After Adding to Cart, Items in Cart: " + afterAdding);
+
+    // let afterAdding =
+    // (await page.evaluate((element) => element.innerText, cartElement)) - 0;
+
+    if (afterAdding - +beforeAdding > 0) {
+        logger.info("Added To Cart");
+        return;
+    }
+
+    logger.error("Adding to cart failed!");
+    throw Error("Adding to cart failed!");
+}

@@ -1,17 +1,19 @@
 import inquirer from "inquirer";
 import { Page } from "puppeteer";
+import { LoginPayload } from "../../utils/interfaces";
 import { logger } from "../../utils/logger";
 
-export async function login(page: Page, email: string, password: string) {
+export async function login(page: Page, payload: LoginPayload) {
+    // open zoro homepage
     await page.goto("https://www.zoro.com/");
-
     logger.info("Opened zoro homepage!");
 
-    //check if sign in button is visible
+    // check if sign in button is visible
     await page.waitForXPath(
         '//*[@id="app"]/div[2]/div/div/div/header/div[3]/div/div/div/div[1]/button[1]'
     );
 
+    // click sign in modal button
     await page.evaluate(() => {
         const signInButton = document.evaluate(
             '//*[@id="app"]/div[2]/div/div/div/header/div[3]/div/div/div/div[1]/button[1]',
@@ -24,33 +26,21 @@ export async function login(page: Page, email: string, password: string) {
         signInButton.click();
     });
 
+    // wait for sign in modal to be visible
     await page.waitForXPath("/html/body/main/div[1]/div[2]/div/div/div/div");
-
     logger.info("Opened sign in modal!");
 
-    await page.evaluate(
-        (email, password) => {
-            //set email
-            (
-                document.querySelector(
-                    'input[type="email"]'
-                ) as HTMLInputElement
-            ).value = email;
+    // type email
+    await page.focus('input[type="email"]');
+    await page.keyboard.type(payload.email);
 
-            //set pass
-            (
-                document.querySelector(
-                    'input[type="password"]'
-                ) as HTMLInputElement
-            ).value = password;
-        },
-        email,
-        password
-    );
+    //type password
+    await page.focus('input[type="password"]');
+    await page.keyboard.type(payload.password);
 
     logger.info("Entered Email and Password!");
 
-    //sign in
+    // click sign in button
     await page.evaluate(() => {
         const signInButton = document.evaluate(
             '//*[@id="app"]/div[1]/div[2]/div/div/div/div/div[2]/div/div[1]/form/button',
@@ -63,20 +53,24 @@ export async function login(page: Page, email: string, password: string) {
         signInButton.click();
     });
 
+    //wait a few seconds
     await page.waitForTimeout(1000 * 5);
 
     try {
+        //check if logged in
         await page.waitForXPath(
             "/html/body/main/div[2]/div/div/div/header/div[3]/div/div/div/div[1]/div/div"
         );
     } catch (error) {
+        //if error then wait till user fixes issue and the continue
         try {
-            const answer = await inquirer.prompt([
+            await inquirer.prompt([
                 {
                     type: "confirm",
-                    message: "continue after fixing login issue",
-                    pageSize: 20,
+                    message:
+                        "continue after fixing login issue (both y/n will continue)",
                     name: "loginIssue",
+                    default: false,
                 },
             ]);
             await page.waitForXPath(
@@ -84,9 +78,7 @@ export async function login(page: Page, email: string, password: string) {
             );
         } catch (error) {
             logger.error("Couldn't login: " + error);
-            return;
+            throw error;
         }
     }
-
-    logger.info("Logged in to Account!");
 }

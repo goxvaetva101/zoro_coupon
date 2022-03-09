@@ -13,13 +13,19 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "bullmq": "^1.76.0",
         "dotenv": "^16.0.0",
         "fast-csv": "^4.3.6",
+        "file-dialog": "0.0.8",
         "inquirer": "^8.2.0",
+        "inquirer-file-tree-selection-prompt": "^1.0.15",
+        "level-rocksdb": "^5.0.0",
         "pkg": "^5.5.2",
+        "proxy-chain": "^1.0.4",
         "puppeteer": "^10.4.0",
         "puppeteer-extra": "^3.2.3",
         "puppeteer-extra-plugin-stealth": "^2.9.0",
+        "uuidv4": "^6.2.12",
         "winston": "^3.6.0"
     },
     "devDependencies": {

@@ -1,14 +1,20 @@
 import { Page } from "puppeteer";
+import { AddToCartPayload } from "../../utils/interfaces";
 import { logger } from "../../utils/logger";
 
-export async function addToCart(page: Page, url: string) {
-    await page.goto(url);
+export async function addToCart(page: Page, payload: AddToCartPayload) {
+    logger.info("Starting to Add To Cart");
+
+    // go to product page
+    await page.goto(payload.url);
     logger.info("Opened Product Page!");
 
+    // wait for cart counter
     await page.waitForFunction(
         '!isNaN(document.querySelector("span.header-cart__count").innerText)'
     );
 
+    // get cart quantiy before adding and then add to cart
     const beforeAdding = await page.evaluate(() => {
         const cartElement = document.querySelector("span.header-cart__count");
         const beforeAdding = cartElement.textContent;
@@ -23,23 +29,7 @@ export async function addToCart(page: Page, url: string) {
 
     logger.info("Before Adding to Cart, Items in Cart: " + beforeAdding);
 
-    // // Get cart item quantity
-    // const cartElement = await page.$("span.header-cart__icon");
-    // let beforeAdding =
-    //     (await page.evaluate((element) => element.innerText, cartElement)) - 0;
-
-    // // Press add to cart buttton
-    // await page.evaluate(() => {
-    //     return document
-    //         .evaluate(
-    //             '//button[contains(text(), "Add to Cart")]',
-    //             document,
-    //             null,
-    //             XPathResult.FIRST_ORDERED_NODE_TYPE,
-    //             null
-    //         )
-    //         .singleNodeValue.click();
-    // });
+    logger.info("Adding To Cart");
 
     // wait till adding to cart
     await page.waitForXPath("/html/body/main/div[1]/div[2]/div[2]/div[1]/h2");
@@ -52,14 +42,11 @@ export async function addToCart(page: Page, url: string) {
 
     logger.info("After Adding to Cart, Items in Cart: " + afterAdding);
 
-    // let afterAdding =
-    // (await page.evaluate((element) => element.innerText, cartElement)) - 0;
-
     if (afterAdding - +beforeAdding > 0) {
-        logger.info("Added To Cart");
+        logger.info("Added To Cart sucessfully!");
         return;
     }
 
-    logger.error("Adding to cart failed!");
+    logger.error("Adding to cart failed: Before and After Numbers Mismatch!");
     throw Error("Adding to cart failed!");
 }

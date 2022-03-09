@@ -53,6 +53,8 @@ export async function login(page: Page, payload: LoginPayload) {
         signInButton.click();
     });
 
+    logger.info("Logging in!");
+
     //wait a few seconds
     await page.waitForTimeout(1000 * 5);
 

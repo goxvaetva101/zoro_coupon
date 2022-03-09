@@ -4,7 +4,7 @@ import {
     DEFAULT_CSV_READER_OPTIONS,
 } from "./defaults";
 
-import * as fs from 'fs';
+import * as fs from "fs";
 
 export async function readCsv(
     fileName: string,
@@ -27,13 +27,11 @@ export async function writeCsv(
     options = DEFAULT_CSV_FORMATTER_OPTIONS
 ) {
     return new Promise<void>((resolve, reject) => {
-
-        const stream = fs.createWriteStream("out.csv",{flags: 'a'});
+        const stream = fs.createWriteStream("out.csv", { flags: "a" });
         writeToStream(stream, data, {
-    includeEndRowDelimiter: true,
-
+            includeEndRowDelimiter: true,
         })
-                .on('error', (err: Error) => reject(err))
-                .on('finish', () => resolve());
+            .on("error", (err: Error) => reject(err))
+            .on("finish", () => resolve());
     });
 }

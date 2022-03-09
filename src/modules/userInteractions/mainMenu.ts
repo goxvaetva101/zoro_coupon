@@ -1,14 +1,10 @@
-import { info } from "console";
 import inquirer from "inquirer";
-import { readCsv, writeCsv } from "../../utils/csv";
-import { logger } from "../../utils/logger";
-import browserControl from "../browserControl";
-import { addBilling } from "../pageActions/billing";
-import { addCard } from "../pageActions/card";
-import { login } from "../pageActions/login";
+
+import { TASKS, TASK_GROUPS } from "./constants";
+import { handleAnswers } from "./handleMainMenuAnswers";
 
 async function mainMenu() {
-    const answers: number[] = await inquirer.prompt([
+    const answers = await inquirer.prompt([
         {
             type: "checkbox",
             message: "Welcome to zoro tools, what do you want to do?",
@@ -19,117 +15,88 @@ async function mainMenu() {
         },
     ]);
 
-    await handleAnswers(answers);
+    await handleAnswers(answers.mainMenu);
 }
 
 const choices = [
     new inquirer.Separator(" = Main Menu = "),
     {
         name: "Login",
-        value: 1,
+        value: TASKS.Login,
     },
+    new inquirer.Separator(" = Requires Login = "),
     {
         name: "Add To Cart",
-        value: 2,
+        value: TASKS.AddToCart,
     },
-    {
-        name: "Check Coupons",
-        value: 3,
-    },
-    new inquirer.Separator(" = Credit Cards = "),
     {
         name: "Add Card",
-        disabled: "Under Development",
-        value: 4,
+        value: TASKS.AddCard,
     },
     {
         name: "Remove Card",
         disabled: "Under Development",
-        value: 5,
+        value: TASKS.RemoveCard,
     },
-    new inquirer.Separator(" = Billing Address ="),
     {
         name: "Add Address",
-        disabled: "Under Development",
-        value: 6,
+        value: TASKS.AddBilling,
     },
     {
         name: "Remove Address",
         disabled: "Under Development",
-        value: 7,
+        value: TASKS.RemoveBilling,
     },
-    new inquirer.Separator(" = Others = "),
+    new inquirer.Separator(" = Can only be run alone = "),
+    {
+        name: "Add to Cart and Check Coupons",
+        value: TASKS.AddToCartAndCheckCoupons,
+    },
+    {
+        name: "Login and Check Coupons",
+        value: TASKS.LogInAndCheckCoupons,
+    },
     {
         name: "Change Password",
         disabled: "Under Development",
-        value: 8,
+        value: TASKS.ChangePassword,
     },
     new inquirer.Separator(" = Extra = "),
     {
-        name: "Add card and billing(temporary)",
-        value: 9,
+        name: "Settings",
+        value: TASKS.Settings,
     },
     {
         name: "Exit",
-        value: 10,
+        value: TASKS.Exit,
     },
 ];
 
-function validate(answers: any): boolean | string {
-    //TODO: Write better validation
+declare global {
+    interface Array<T> {
+        random(): T;
+        includesAny(arr: any[]): boolean;
+    }
+}
+
+function validate(answers: number[]): boolean | string {
     if (answers.length < 1) {
         return "You must choose at least one tool.";
     }
 
-    return true;
-}
+    if (
+        answers.includesAny(TASK_GROUPS.requiresLogin) &&
+        !answers.includes(TASKS.Login)
+    ) {
+        return "Some tasks chosen require login to also be selected!";
+    }
 
-async function handleAnswers(answers: number[]) {
-    // logger.info(
-    //     "Starting tools: " + console.log(JSON.stringify(answers, null, "  "))
-    // );
-        const a = await readCsv("accounts.csv");
-        
-        for(let i in a){
-            const browser = await browserControl.launchBrowser();
+    const a = answers.includesAny(TASK_GROUPS.runsAlone);
+    if (answers.includesAny(TASK_GROUPS.runsAlone) && answers.length > 1) {
+        return "Some tasks chosen can only be run alone!";
+    }
 
-            try{
-            let current = a[i];
-            logger.info(i+"/"+a.length+" : Starting now")
-            const page = await browser.newPage();
-            await page.setDefaultNavigationTimeout(0);
-            await login(page, current.email, current.password);
-            await addCard(page,current.cardNo,current.month,current.year,current.name)
-            await addBilling(page,
-                {
-                    name: current.nameBilling,
-                    company:current.company,
-                    address:current.address,
-                    address2:current.address2,
-                    city:current.city,
-                    state:current.state,
-                    zip:current.zip,
-                    phone:current.phone
-                })
-
-            await writeCsv("out.csv",[{
-                email:current.email
-            }])
-            
-            }catch(error){
-                logger.error(error);
-            }
-            await browser.close();
-
-
-        }
-        // const browser = await browserControl.launchBrowser();
-        // const page = await browser.newPage();
-        // await page.setDefaultNavigationTimeout(0);
-        // await login(page, "Upx.gp0012@gmail.com", "!q6]U>Qct{e@Zr7byn8+");
-        // await addCard(page,"4733445784282926","12","2026","GoToKnow")
-        // await browser.close();
-        //Run Add To Cart
+    if (answers) return true;
 }
 
 export default mainMenu;
